@@ -1,0 +1,1 @@
+{"schemaVersion":1,"file":"heights-near.bin","grid":{"x0":-8569.27,"z0":-6452.8,"step":300,"columns":64,"rows":64},"tiles":[{"id":"flat","column":0,"row":0,"columns":64,"rows":64,"triangles":7938}],"surfaceOffset":0,"budgets":{"triangles":7938,"tiles":1,"bytes":16384,"maxHeight":0},"places":[],"ridgeSamples":[]}

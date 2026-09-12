@@ -1,0 +1,38 @@
+{
+  "name": "shenchengji-open-roads",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "prebuild": "node scripts/check-character-assets.mjs",
+    "build": "tsc --noEmit && vite build",
+    "build:characters": "npm run build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --experimental-transform-types --test tests/*.test.ts",
+    "assets": "node scripts/rebuild_city_assets.mjs",
+    "test:city": "node scripts/city-tour.mjs",
+    "test:city-life": "node --experimental-transform-types scripts/city-life-check.mjs",
+    "benchmark:city": "node --experimental-transform-types scripts/city-benchmark.mjs",
+    "city:fetch": "scripts\\py.cmd scripts/fetch_guyuan_overpass.py",
+    "city:pois": "scripts\\py.cmd scripts/amap_pois.py",
+    "city:prepare": "scripts\\py.cmd scripts/prepare_guyuan_city.py",
+    "city:infill": "scripts\\py.cmd scripts/infill_buildings.py",
+    "city:glb": "node scripts/build_city_glb.mjs",
+    "city:rebuild": "npm run city:prepare && npm run city:infill && npm run city:glb",
+    "city:smoke": "node scripts/guyuan-smoke.mjs"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^8.0.0",
+    "@babylonjs/loaders": "^8.0.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.5.0",
+    "@gltf-transform/extensions": "^4.5.0",
+    "@gltf-transform/functions": "^4.5.0",
+    "meshoptimizer": "^1.2.0",
+    "playwright": "^1.55.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0"
+  }
+}

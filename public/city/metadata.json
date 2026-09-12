@@ -1,0 +1,36 @@
+{
+  "version": "0.1",
+  "source": "OpenStreetMap contributors (Overpass, 2026-09-12)",
+  "license": "ODbL-1.0",
+  "bboxWGS84": [
+    106.2,
+    35.98,
+    106.36,
+    36.06
+  ],
+  "originWGS84": [
+    106.273,
+    36.02
+  ],
+  "horizontalScale": 1.0,
+  "verticalScale": 1.0,
+  "coordinateSystem": "local east/north; equirectangular at Guyuan latitude, metres 1:1",
+  "roadTreatment": "prototype roads flattened; one-way tags kept but driving unrestricted",
+  "heightStatus": {
+    "typology_estimate": 1052,
+    "osm_levels_estimated": 1
+  },
+  "counts": {
+    "roads": 905,
+    "buildings": 1055,
+    "green": 67,
+    "water": 16,
+    "landmarks": 11
+  },
+  "extent": [
+    -6569.27,
+    -4452.8,
+    7829.13,
+    4452.8
+  ]
+}

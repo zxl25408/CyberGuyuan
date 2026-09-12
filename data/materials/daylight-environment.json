@@ -1,0 +1,55 @@
+{
+  "id": "shenzhen-clear-blue-daylight",
+  "purpose": "Clear blue sky over the bay, with sparse soft clouds and shared HDR radiance in sky, water and PBR reflections. Lighting reference, not a photograph of Shenzhen.",
+  "source": {
+    "name": "Rustig Koppie (Pure Sky)",
+    "authors": [
+      "Greg Zaal",
+      "Jarod Guest"
+    ],
+    "page": "https://polyhaven.com/a/rustig_koppie_puresky",
+    "metadataUrl": "https://api.polyhaven.com/files/rustig_koppie_puresky",
+    "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/rustig_koppie_puresky_4k.hdr",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://polyhaven.com/license",
+    "retrieved": "2026-09-06",
+    "size": 15257521,
+    "md5": "499abd33d77b000b80a7ce024fc72ec2",
+    "sha256": "0a7431d4831e71d8690ab1be0a9baaec181962918166395cf14cbe1add6a84a9"
+  },
+  "runtime": {
+    "file": "public/city/environment/rustig-blue-sky-4k.hdr",
+    "sourceResolution": [
+      4096,
+      2048
+    ],
+    "cubeFaceResolution": 1024,
+    "rotationY": 1.85,
+    "prefilteredOnLoad": true,
+    "radiance": "Linear HDR with a solar-only luminance shoulder above 8 (asymptote 32) and restrained warm solar tint before spherical harmonics and roughness filtering. Ordinary sky/cloud radiance is unchanged. The sharp sky and PBR reflections share the same graded cube; the source file is untouched.",
+    "solarDirection": "Sampled source solar-disc direction in Babylon cube space, transformed by inverse environment rotation. Not astronomical simulation.",
+    "extraFrameRenderTargets": 0,
+    "controls": "cinematic.setMode('day'); setNight(true/false) remains compatible for night/sunset.",
+    "solarDirectionSourceCube": [
+      0.504674,
+      0.473661,
+      0.721768
+    ],
+    "solarHighlight": {
+      "luminanceKnee": 8,
+      "luminanceCeiling": 32,
+      "warmMultiplier": [
+        1,
+        0.94,
+        0.84
+      ],
+      "stage": "decode before SH and roughness filtering",
+      "extraTextures": 0
+    }
+  },
+  "validation": {
+    "source": "Downloaded bytes and MD5 match official metadata; local SHA-256 recorded; HDR decoded as 4096x2048.",
+    "visualSource": "Official panorama reviewed against Kloppenheim 05: predominantly clear blue upper sky, sparse soft clouds and low cloud band; no imported buildings or mountains.",
+    "integratedVisual": "2026-09-06 solar-highlight balance: matched front/rear car, city and bay views in output/playwright/daylight-balance/{before,after}; car paint retains blue under the solar highlight. Day, sunset and night cycling checked; browser errors 0. Current after city stationary 6-second 1080p Chrome Metal sample: 60.008 FPS, p95 19.7 ms. Details: docs/graphics/daylight-mountains-2026-09-06.md."
+  }
+}

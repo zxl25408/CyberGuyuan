@@ -1,3 +1,4 @@
+import {CITY_REGION} from '../src/city-region.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -20,7 +21,7 @@ test('cafe coordinate transform round trips; ground adaptation stays in the orig
  assert(layout.reserved(floor.x,floor.z));assert(!layout.reserved(outside.x,outside.z));assert(layout.reserved(outside.x,outside.z,4));
 });
 
-test('real city footprint and road frontage are clear; walkable door and furniture collisions use the same rotation',()=>{
+test('real city footprint and road frontage are clear; walkable door and furniture collisions use the same rotation',{skip:CITY_REGION.id==='guyuan'?'Requires archived Shenzhen assets; Guyuan has dedicated region tests':false},()=>{
  const city=read('public/city/city.json'),collision=new CityCollision(city);
  for(let x=-10;x<=10;x++)for(let z=-12;z<=8;z++){
   const p=layout.world(x,z);assert(!collision.blocked(p.x,p.z),`occupied site at ${x},${z}`);

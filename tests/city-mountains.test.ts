@@ -1,3 +1,4 @@
+import {CITY_REGION} from '../src/city-region.ts';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
@@ -11,7 +12,7 @@ test('mountain ground follows rendered triangles, not a curved bilinear patch',(
  assert.equal(mountainHeightAt(h,g,NaN,.5),0);
 });
 
-test('current mountain data reserves old Lianhua terrain and contains substantial ridges',()=>{
+test('current mountain data reserves old Lianhua terrain and contains substantial ridges',{skip:CITY_REGION.id==='guyuan'?'Requires archived Shenzhen assets; Guyuan has dedicated region tests':false},()=>{
  const path=new URL('../public/city/mountain-relief/',import.meta.url),m=JSON.parse(readFileSync(new URL('manifest.json',path),'utf8'));
  const b=readFileSync(new URL(m.file,path)),h=new Float32Array(b.buffer,b.byteOffset,b.byteLength/4),g=m.grid;
  assert.equal(b.byteLength,g.columns*g.rows*4);assert.ok(m.budgets.triangles<260000);
@@ -21,7 +22,7 @@ test('current mountain data reserves old Lianhua terrain and contains substantia
  for(const v of h)assert.ok(Number.isFinite(v)&&v>=0&&v<600);
 });
 
-test('both mountain grids keep motor-road corridors and original Lianhua ground unraised',()=>{
+test('both mountain grids keep motor-road corridors and original Lianhua ground unraised',{skip:CITY_REGION.id==='guyuan'?'Requires archived Shenzhen assets; Guyuan has dedicated region tests':false},()=>{
  const path=new URL('../public/city/',import.meta.url),city=JSON.parse(readFileSync(new URL('city.json',path),'utf8'));
  const regions=['manifest.json','near-manifest.json'].map(file=>{
   const m=JSON.parse(readFileSync(new URL('mountain-relief/'+file,path),'utf8')),b=readFileSync(new URL('mountain-relief/'+m.file,path));

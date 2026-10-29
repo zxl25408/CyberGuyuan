@@ -19,12 +19,14 @@
     "city:prepare": "scripts\\py.cmd scripts/prepare_guyuan_city.py",
     "city:infill": "scripts\\py.cmd scripts/infill_buildings.py",
     "city:glb": "node scripts/build_city_glb.mjs",
-    "city:rebuild": "npm run city:prepare && npm run city:infill && npm run city:glb",
-    "city:smoke": "node scripts/guyuan-smoke.mjs"
+    "city:rebuild": "npm run city:prepare && npm run city:infill && npm run city:glb && npm run city:navigation",
+    "city:smoke": "node scripts/guyuan-smoke.mjs",
+    "city:catalog": "node scripts/sync-guyuan-catalog.mjs",
+    "city:navigation": "node scripts/build-navigation.mjs"
   },
   "dependencies": {
-    "@babylonjs/core": "^8.0.0",
-    "@babylonjs/loaders": "^8.0.0"
+    "@babylonjs/core": "8.56.2",
+    "@babylonjs/loaders": "8.56.2"
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.5.0",

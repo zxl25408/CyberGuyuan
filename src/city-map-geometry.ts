@@ -1,4 +1,5 @@
 import type {Landmark, Road, V2} from './city-types.ts';
+import {CITY_REGION} from './city-region.ts';
 import {roadVicinityName} from './city-road-names.ts';
 
 export type MapView = {x: number; z: number; scale: number; width: number; height: number};
@@ -17,7 +18,7 @@ export type SourcedMapPlace = {
 
 export function wgs84ToMap(lon: number, lat: number): V2 {
   // Guyuan 1:1: origin [106.273, 36.020], lon factor 111320*cos(36.020°).
-  return [(lon - 106.273) * 89990, (lat - 36.020) * 111320];
+  return [(lon - CITY_REGION.origin[0]) * CITY_REGION.factors[0], (lat - CITY_REGION.origin[1]) * CITY_REGION.factors[1]];
 }
 
 export function mapToScreen(view: MapView, point: V2): V2 {

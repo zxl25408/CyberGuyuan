@@ -1,13 +1,13 @@
 import {chromium} from 'playwright';import fs from 'node:fs/promises';
 import {RoadGraph} from '../src/navigation.ts';
 const city=JSON.parse(await fs.readFile('public/city/city.json','utf8')),graph=new RoadGraph(city.roads,JSON.parse(await fs.readFile('public/city/navigation.json','utf8')));
-const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal']});const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});const errors=[];page.on('pageerror',e=>errors.push(e.message));let keys=new Set();
+const browser=await chromium.launch({headless:true,...(process.env.BROWSER_PATH?{executablePath:process.env.BROWSER_PATH}:process.env.BROWSER_CHANNEL||process.platform==='win32'?{channel:process.env.BROWSER_CHANNEL||'msedge'}:{})});const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});const errors=[];page.on('pageerror',e=>errors.push(e.message));let keys=new Set();
 async function input(wanted){const set=new Set(wanted);for(const k of keys)if(!set.has(k))await page.keyboard.up(k);for(const k of set)if(!keys.has(k))await page.keyboard.down(k);keys=set;}
 const closest=(p,a,b)=>{const dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((p.x-a[0])*dx+(p.z-a[1])*dz)/(dx*dx+dz*dz||1)));return {x:a[0]+dx*t,z:a[1]+dz*t,d:Math.hypot(p.x-a[0]-dx*t,p.z-a[1]-dz*t)};};
 try{
  await page.goto(process.env.GAME_URL??'http://127.0.0.1:4173/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__SHENCHENGJI_CITY__?.ready,null,{timeout:120000});await page.waitForTimeout(5000);const runs=[];
- for(const [start,dest] of [['opening','bamboo'],['pingan','civic'],['kk100','pingan']]){
-  if(start!=='opening'){await page.keyboard.press('m');await page.locator('[data-id="'+start+'"]').click();await page.getByRole('button',{name:'快速前往周边道路'}).click();await page.waitForTimeout(2000);}
+ for(const [start,dest] of [['opening','renmin_park'],['renmin_park','center_park'],['center_park','xihu_park']]){
+  if(start!=='opening'){await page.keyboard.press('m');await page.locator('[data-id="'+start+'"]').click();await page.getByRole('button',{name:'移动到附近道路'}).click();await page.waitForTimeout(2000);}
   let state=await page.evaluate(()=>window.__SHENCHENGJI_CITY__.state);const before={...state};const landmark=city.landmarks.find(m=>m.id===dest);const route=graph.route([state.x,state.z],landmark.arrival);if(!route.length)throw Error('No benchmark route');let index=0,stuck=0,recoveries=0;await page.evaluate(()=>window.__SHENCHENGJI_CITY__.resetPerformance());const begun=Date.now();
   while(Date.now()-begun<(Number(process.env.SEGMENT_SECONDS)||100)*1000){
    state=await page.evaluate(()=>window.__SHENCHENGJI_CITY__.state);let best=Infinity;for(let i=Math.max(0,index-2);i<Math.min(route.length-1,index+14);i++){const q=closest(state,route[i],route[i+1]);if(q.d<best){best=q.d;index=i;}}
@@ -20,5 +20,5 @@ try{
   }
   await input([]);const result=await page.evaluate(()=>({state:window.__SHENCHENGJI_CITY__.state,performance:window.__SHENCHENGJI_CITY__.performance}));runs.push({start,destination:dest,wallSeconds:(Date.now()-begun)/1000,distanceTravelled:result.state.distance-before.distance,recoveries,...result});console.log(JSON.stringify(runs.at(-1)));await page.screenshot({path:'artifacts/city/benchmark-'+start+'.png'});
  }
- const report={date:new Date().toISOString(),browser:await browser.version(),platform:'M1 Max macOS / Chrome Metal WebGL2',scope:`3 sequential ${Number(process.env.SEGMENT_SECONDS)||100}-second windows at 1920x1080. Destinations initialized through UI fast travel between windows, 2-second transition warmups excluded. Driving uses ordinary keyboard controls only. Measured raw render frame intervals; first 120 frames of each window excluded.`,errors,runs};await fs.writeFile('artifacts/city/performance-v0.3.json',JSON.stringify(report,null,2));if(errors.length)process.exitCode=1;
+ const report={region:'guyuan',date:new Date().toISOString(),browser:await browser.version(),platform:process.platform,scope:`3 sequential ${Number(process.env.SEGMENT_SECONDS)||100}-second windows at 1920x1080. Destinations initialized through UI fast travel between windows, 2-second transition warmups excluded. Driving uses ordinary keyboard controls only. Measured raw render frame intervals; first 120 frames of each window excluded.`,errors,runs};await fs.writeFile('artifacts/city/performance-v0.3.json',JSON.stringify(report,null,2));if(errors.length)process.exitCode=1;
 }catch(e){console.error(e);process.exitCode=1;}finally{await input([]);await browser.close();}

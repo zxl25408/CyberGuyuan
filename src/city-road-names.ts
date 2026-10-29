@@ -4,7 +4,7 @@ import {closest} from './driving.ts';
 const generic = /^(?:支路|未命名(?:道路)?|道路|无名路|unnamed|road)?$/i;
 export const isUnnamedRoad = (road: Road) => generic.test(road.name.trim());
 /** Context labels are game directions, never replacements for the OSM name. */
-export const roadDisplayName = (road: Road) => road.displayName || (isUnnamedRoad(road) ? '深圳街区 · 支路' : road.name);
+export const roadDisplayName = (road: Road) => road.displayName || (isUnnamedRoad(road) ? '固原街区 · 支路' : road.name);
 export const roadVicinityName = (road: Road) => isUnnamedRoad(road) ? roadDisplayName(road) : `${road.name}附近`;
 type Place = {name: string; x: number; z: number; category: string; kind?: string};
 type Segment = {a: V2; b: V2; road: Road};

@@ -1,3 +1,4 @@
+import {CITY_REGION} from '../src/city-region.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
@@ -48,7 +49,7 @@ test('welding crosses quantization cell boundaries without moving the top edge',
  assert.equal(g.stats.boundaryEdges,4);assert.equal(g.stats.weldedVertices,4);assert.equal(g.stats.triangles,8);checkWinding(g);
 });
 
-test('actual meshopt shore closes its 1812 open edges after normalized positions and runtime root transform',async()=>{
+test('actual meshopt shore closes its 1812 open edges after normalized positions and runtime root transform',{skip:CITY_REGION.id==='guyuan'?'Requires archived Shenzhen assets; Guyuan has dedicated region tests':false},async()=>{
  await MeshoptDecoder.ready;
  const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.decoder':MeshoptDecoder});
  const document=await io.read(fileURLToPath(new URL('../public/city/opposite-shore.glb',import.meta.url)));

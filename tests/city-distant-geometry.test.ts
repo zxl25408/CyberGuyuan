@@ -60,11 +60,11 @@ test('invalid and replacement footprints create no distant buildings; consecutiv
  const result=buildDistantCityGeometry(city(rows));assert.equal(result.buildingCount,1);assert.equal(result.skippedBuildingCount,4);assert.equal(result.skippedRoofCount,0);checkFaces(result.tiles[0]);
 });
 
-test('current city stays under 500k triangles and 200 merged tiles without invented buildings or skipped roofs',()=>{
+test('current city stays under 500k triangles and one merged tile per spatial cell without invented buildings or skipped roofs',()=>{
  const data=JSON.parse(readFileSync(new URL('../public/city/city.json',import.meta.url),'utf8')) as CityData;
  const result=buildDistantCityGeometry(data);
  assert.equal(result.buildingCount,data.buildings.length);assert.equal(result.skippedBuildingCount,0);assert.equal(result.skippedRoofCount,0);
- assert(result.triangleCount<500_000);assert(result.tiles.length<200);
+ assert(result.triangleCount<500_000);const [xmin,zmin,xmax,zmax]=data.meta.extent;const cells=(Math.floor(xmax/640)-Math.floor(xmin/640)+1)*(Math.floor(zmax/640)-Math.floor(zmin/640)+1);assert(result.tiles.length<=cells);
  assert.equal(result.tiles.reduce((sum,t)=>sum+t.buildingCount,0),result.buildingCount);
  for(const tile of result.tiles){assert(tile.positions.every(Number.isFinite));assert(tile.normals.every(Number.isFinite));}
 });

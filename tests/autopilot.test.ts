@@ -161,12 +161,13 @@ test('disconnected road graph stops without moving; invalid destinations are rej
 });
 
 const actual=JSON.parse(fs.readFileSync('public/city/city.json','utf8'));
-const detail=JSON.parse(fs.readFileSync('public/city/landmark-detail.json','utf8'));
+const hasShenzhenDetails=fs.existsSync('public/city/landmark-detail.json');
+const detail=hasShenzhenDetails?JSON.parse(fs.readFileSync('public/city/landmark-detail.json','utf8')):{baseBuildingIds:[],collisionFootprints:[],landmarks:[]};
 actual.buildings=actual.buildings.filter((b:{id:string})=>!detail.baseBuildingIds.includes(b.id));
 for(const b of detail.collisionFootprints)actual.buildings.push({...b,height:1,style:'detail'});
 for(const m of detail.landmarks) {const index=actual.landmarks.findIndex((p:{id:string})=>p.id===m.id);if(index<0)actual.landmarks.push(m);else actual.landmarks[index]={...actual.landmarks[index],...m};}
 const city=actual as CityData,cityCollision=new CityCollision(city),cityGraph=new RoadGraph(city.roads,JSON.parse(fs.readFileSync('public/city/navigation.json','utf8')));
-test('actual two-way Gaoxin South Ring Road turns toward destinations 3.5 and 40 units behind the car',t=>{
+test('actual two-way Gaoxin South Ring Road turns toward destinations 3.5 and 40 units behind the car',{skip:!hasShenzhenDetails?'Requires Shenzhen road fixture':false},t=>{
  const road=city.roads.find(r=>r.id==='way/736676593')!;assert(road&&!road.oneway);assert.equal(road.width,12);
  const [a,b]=road.points,roadYaw=Math.atan2(b[0]-a[0],b[1]-a[1]),x=(a[0]+b[0])/2,z=(a[1]+b[1])/2;
  for(const distance of [3.5,40]) {
@@ -181,7 +182,7 @@ test('actual two-way Gaoxin South Ring Road turns toward destinations 3.5 and 40
 for(const [name,start] of [
  ['actual Tencent parking pose',[-5465.953431,-684.687511,-.72075067]],
  ['reported stopped pose',[-5433.89895,-742.56657,-4.69739]],
-] as const)test(`stationary traffic near Tencent: ${name} safely detours to baypark`,t=>{
+] as const)test(`stationary traffic near Tencent: ${name} safely detours to baypark`,{skip:!hasShenzhenDetails?'Requires Shenzhen road fixture':false},t=>{
  const destination=city.landmarks.find(m=>m.id==='baypark')!,controller=new CityAutopilot(cityGraph,cityCollision),state=car(...start);
  // The original GPU capture has no traffic snapshot. This fixed stopped car
  // recreates a blocked lane at that exact road, without claiming it was the
@@ -195,7 +196,7 @@ for(const [name,start] of [
  t.diagnostic(JSON.stringify({name,state,reroutes:controller.status.reroutes,...run}));
 });
 const destinations=process.env.AUTOPILOT_ALL_DESTINATIONS==='1'?city.landmarks.map(m=>m.id):['bamboo','tencent','civic','talent','baypark','qijie-gongguan'];
-for(const id of destinations)test(`actual merged city: opening → ${id} completes entirely through stepCar`,t=>{
+for(const id of destinations)test(`actual merged city: opening → ${id} completes entirely through stepCar`,{skip:!city.landmarks.some(m=>m.id===id)?'Destination is not in the current region':false},t=>{
  const destination=city.landmarks.find(m=>m.id===id)!,controller=new CityAutopilot(cityGraph,cityCollision),state:CarState={...city.spawn,speed:0,steer:0,distance:0};
  controller.start(destination);const run=drive(controller,state,cityCollision,1200);
  assertArrived(controller,state,destination.arrival);assert.equal(run.hits,0);assert(state.distance>(id==='baypark'?600:2500));

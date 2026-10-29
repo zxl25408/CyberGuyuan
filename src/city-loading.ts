@@ -3,18 +3,18 @@ import './city-loading.css';
 /** Each entry begins after the preceding awaited task has finished. Equal
  * stages describe boot completion, never pretend to measure downloaded bytes. */
 export const CITY_LOADING_STAGES=[
- {id:'map',label:'正在展开深圳地图',group:'城市骨架'},
- {id:'ridges',label:'正在展开深圳山脊',group:'城市骨架'},
+ {id:'map',label:'正在展开固原地图',group:'城市骨架'},
+ {id:'ridges',label:'正在展开固原山脊',group:'城市骨架'},
  {id:'relief',label:'正在铺设公园缓坡',group:'城市骨架'},
  {id:'bridges',label:'正在架设跨水桥梁',group:'城市骨架'},
- {id:'coast',label:'正在铺设海岸线和城市道路',group:'海岸与天际线'},
- {id:'buildings',label:'正在载入南山、福田、罗湖建筑',group:'海岸与天际线'},
- {id:'landmarks',label:'正在装配深圳地标',group:'海岸与天际线'},
- {id:'signage',label:'正在点亮城市招牌',group:'海岸与天际线'},
+ {id:'coast',label:'正在铺设城市道路',group:'街道与建筑'},
+ {id:'buildings',label:'正在载入固原街区建筑',group:'街道与建筑'},
+ {id:'landmarks',label:'正在装配固原地标',group:'街道与建筑'},
+ {id:'signage',label:'正在点亮城市招牌',group:'街道与建筑'},
  {id:'vehicle',label:'正在启动你的车',group:'路上的生活'},
- {id:'landscape',label:'正在种植榕树、棕榈与花境',group:'路上的生活'},
+ {id:'landscape',label:'正在准备城市植被',group:'路上的生活'},
  {id:'furniture',label:'正在布置城市座椅',group:'路上的生活'},
- {id:'lighting',label:'正在调试海湾的光与倒影',group:'光与倒影'},
+ {id:'lighting',label:'正在调试城市光影',group:'光与倒影'},
  {id:'puddles',label:'雨停了，正在铺设路边积水',group:'光与倒影'},
  {id:'navigation',label:'正在连接城市导航',group:'准备出发'},
  {id:'life-sites',label:'正在打开沿途生活',group:'准备出发'},
@@ -34,10 +34,10 @@ const CITY_LOADING_POSTER='/city/loading/bamboo-clay-poster.jpg?v=2';
 export function createCityLoading(host:HTMLElement=document.body,options:CityLoadingOptions={}){
  const element=document.createElement('section');element.className='city-loader';element.id='city-loading';
  element.setAttribute('role','dialog');element.setAttribute('aria-modal','true');
- element.setAttribute('aria-label','深城纪正在载入');element.setAttribute('aria-busy','true');element.tabIndex=-1;
+ element.setAttribute('aria-label','固原漫游正在载入');element.setAttribute('aria-busy','true');element.tabIndex=-1;
  element.innerHTML=`<img class="city-loader-poster" src="${CITY_LOADING_POSTER}" alt="" fetchpriority="low" decoding="async"><video class="city-loader-film" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" disablepictureinpicture></video><div class="city-loader-vignette" aria-hidden="true"></div>
-  <div class="city-loader-topline"><span>SHENZHEN / OPEN ROADS</span><span>一座城市 · 无数种生活</span></div>
-  <div class="city-loader-title"><span class="city-loader-edition">城市漫游</span><h1>深城纪</h1><div class="city-loader-title-rule" aria-hidden="true"></div><p>把下班后的时间，<br>还给这座城市。</p><span class="city-loader-districts">南山<span></span>福田<span></span>罗湖</span></div>
+  <div class="city-loader-topline"><span>GUYUAN / OPEN ROADS</span><span>一座城市 · 无数种生活</span></div>
+  <div class="city-loader-title"><span class="city-loader-edition">城市漫游</span><h1>固原漫游</h1><div class="city-loader-title-rule" aria-hidden="true"></div><p>把下班后的时间，<br>还给这座城市。</p><span class="city-loader-districts">原州<span></span>街道<span></span>公园</span></div>
   <div class="city-loader-bottom"><div class="city-loader-progress-block"><div class="city-loader-progress-heading"><div><span class="city-loader-group">城市骨架</span><p class="city-loader-status" role="status" aria-live="polite">正在启动城市</p></div><div class="city-loader-percent"><b>0</b><span>%</span></div></div>
    <div class="city-loader-progress" role="progressbar" aria-label="城市载入阶段进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
    <div class="city-loader-progress-meta"><span class="city-loader-count">阶段 01 / 17</span><span class="city-loader-progress-basis">按已完成阶段推进</span></div>

@@ -1,4 +1,5 @@
 import './city-map.css';
+import {assertRegionCatalog} from './city-region.ts';
 import {roadDisplayName,isUnnamedRoad} from './city-road-names.ts';
 import type {CityData, Landmark, Road, V2} from './city-types.ts';
 import type {RoadGraph} from './navigation.ts';
@@ -41,7 +42,7 @@ export type CityMapController = {
 type CatalogPlace = CityMapDestination & {category: MapCategory; rank: number};
 type MapFeature = {path: Path2D; bounds: [number, number, number, number]};
 type TextLabel = MapLabelCandidate & {name: string; font: string; color: string; angle: number; place?: CatalogPlace; city?: boolean};
-const categoryNames: Record<MapCategory, string> = {landmark: '城市地标', district: '城市片区', park: '公园与海滨', place: '城市地点', transport: '交通站点', road: '道路'};
+const categoryNames: Record<MapCategory, string> = {landmark: '城市地标', district: '城市片区', park: '公园与绿地', place: '城市地点', transport: '交通站点', road: '道路'};
 const roadKinds = ['motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'residential', 'unclassified', 'service'];
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 const normal = (s: string) => s.normalize('NFKC').toLocaleLowerCase().replace(/[\s·・—–\-]/g, '');
@@ -69,14 +70,14 @@ export function initializeCityMap(options: CityMapOptions): CityMapController {
   panel.innerHTML = `
     <div class="atlas-shell">
       <header class="atlas-heading">
-        <div class="atlas-brand"><small>SHENZHEN / OPEN ROADS</small><h2 id="city-map-title">城市地图</h2></div>
+        <div class="atlas-brand"><small>GUYUAN / OPEN ROADS</small><h2 id="city-map-title">城市地图</h2></div>
         <form class="atlas-search" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="map-search" type="search" autocomplete="off" spellcheck="false" placeholder="搜索地标、片区或道路" aria-label="搜索地图地点"><kbd>↵</kbd></form>
         <button id="close-map" class="atlas-close" type="button">返回驾驶 <kbd>M</kbd></button>
       </header>
       <div class="atlas-layout">
         <div class="atlas-map-wrap">
-          <canvas id="city-map" tabindex="0" aria-label="深圳道路地图。拖拽浏览，滚轮缩放，点击选择目的地。方向键移动，加减键缩放。"></canvas>
-          <div class="atlas-map-caption"><span>南山 · 福田 · 罗湖</span><small id="map-view-level">街道与周边</small></div>
+          <canvas id="city-map" tabindex="0" aria-label="固原道路地图。拖拽浏览，滚轮缩放，点击选择目的地。方向键移动，加减键缩放。"></canvas>
+          <div class="atlas-map-caption"><span>原州区 · 固原</span><small id="map-view-level">街道与周边</small></div>
           <div class="atlas-map-tools" aria-label="地图视角"><button type="button" data-map-command="in" aria-label="放大地图">＋</button><button type="button" data-map-command="out" aria-label="缩小地图">−</button><span></span><button type="button" data-map-command="player" aria-label="定位我的车辆" title="定位我的车辆">⌖</button><button type="button" data-map-command="all" aria-label="查看完整城市" title="查看完整城市">↔</button></div>
           <div class="atlas-map-north" aria-hidden="true"><span>↑</span>N</div>
           <div class="atlas-map-bottom"><div class="atlas-scale"><span id="map-scale-label"></span><i id="map-scale-line"></i></div><span id="map-status" role="status">点击地点，规划下一段路</span></div>
@@ -147,7 +148,7 @@ export function initializeCityMap(options: CityMapOptions): CityMapController {
   for (const {road, point} of roadByName.values()) {
     const snapped = roadIndex.nearest(point, undefined, road.id);
     if (!snapped) continue;
-    catalog.push({id: `road:${roadDisplayName(road)}`, name: roadDisplayName(road), x: point[0], z: point[1], height: 0, area: isUnnamedRoad(road)?'深圳 · 道路方位参考':'深圳 · 道路',
+    catalog.push({id: `road:${roadDisplayName(road)}`, name: roadDisplayName(road), x: point[0], z: point[1], height: 0, area: isUnnamedRoad(road)?'固原 · 道路方位参考':'固原 · 道路',
       arrival: [snapped.x, snapped.z], yaw: snapped.yaw, excludeRadius: 0, category: 'road', kind: road.kind,
       rank: 10, source: {provider: 'OpenStreetMap', id: road.id, url: `https://www.openstreetmap.org/${road.id}`, file: 'public/city/city.json', coordinateMethod: 'road_polyline_midpoint'}});
   }
@@ -555,14 +556,14 @@ export function initializeCityMap(options: CityMapOptions): CityMapController {
   const ready = fetch(new URL('../data/map-places.json', import.meta.url), {signal}).then(async response => {
     if (!response.ok) throw new Error('地图地点未能载入');
     const document = await response.json() as {schemaVersion: number; places: SourcedMapPlace[]};
-    if (document.schemaVersion !== 1 || !Array.isArray(document.places)) throw new Error('地图地点格式不正确');
+    assertRegionCatalog(document);
     if (destroyed) return;
     for (const place of document.places) {
       const converted = wgs84ToMap(place.lon, place.lat);
       if (!Number.isFinite(place.x + place.z) || Math.hypot(converted[0] - place.x, converted[1] - place.z) > .02) continue;
       if (catalog.some(p => p.name === place.name && Math.hypot(p.x - place.x, p.z - place.z) < 180)) continue;
       const nearest = roadIndex.nearest([place.x, place.z]); if (!nearest || nearest.distance > 600) continue;
-      catalog.push({...place, height: 0, excludeRadius: 0, area: `深圳 · ${categoryNames[place.category]}`,
+      catalog.push({...place, height: 0, excludeRadius: 0, area: `固原 · ${categoryNames[place.category]}`,
         arrival: [nearest.x, nearest.z], yaw: nearest.yaw,
         rank: place.kind === 'city' ? 95 : place.kind === 'suburb' ? 65 : place.category === 'park' ? 70 : place.category === 'district' ? 35 : 55});
     }

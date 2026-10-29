@@ -1,3 +1,4 @@
+import {CITY_REGION} from '../src/city-region.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -6,7 +7,7 @@ import {manualSteeringInput,stepCar} from '../src/driving.ts';
 import type {CityData} from '../src/city-types.ts';
 const data=JSON.parse(readFileSync(new URL('../public/city/city.json',import.meta.url),'utf8')) as CityData;
 const meta=JSON.parse(readFileSync(new URL('../public/city/coastal/infrastructure.json',import.meta.url),'utf8')) as CoastalManifest;
-test('all mapped water-crossing decks clear the common water plane and remain road aligned',()=>{
+test('all mapped water-crossing decks clear the common water plane and remain road aligned',{skip:CITY_REGION.id==='guyuan'?'Requires archived Shenzhen assets; Guyuan has dedicated region tests':false},()=>{
  const sampler=createBridgeHeightSampler(data,meta,()=>0);let checks=0;
  for(const crossing of meta.crossings)for(let i=1;i<crossing.points.length;i++){const a=crossing.points[i-1],b=crossing.points[i];for(const t of [0,.25,.5,.75,1]){const h=sampler.heightAt(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t);assert(h>=2.799,`${crossing.name} ${crossing.id} ${h}`);assert(h-meta.waterHeight>3);checks++;}}
  assert(checks>100);assert(meta.crossings.some(c=>c.name==='后海二桥'));assert(meta.crossings.some(c=>c.name==='后海大桥'));

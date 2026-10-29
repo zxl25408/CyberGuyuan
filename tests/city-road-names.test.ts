@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {assignRoadDisplayNames,roadDisplayName} from '../src/city-road-names.ts';
+import {isUnnamedRoad,assignRoadDisplayNames,roadDisplayName} from '../src/city-road-names.ts';
 import {MapRoadIndex,mapPointDestination} from '../src/city-map-geometry.ts';
 import type {CityData,Road,V2} from '../src/city-types.ts';
 const road=(id:string,name:string,points:V2[],kind='service',grade='0'):Road=>({id,name,points,kind,grade,width:6,oneway:false});
@@ -34,7 +34,7 @@ test('current city resolves every generic road, is deterministic, and leaves geo
  const before=data.roads.map(r=>({name:r.name,points:JSON.stringify(r.points)}));
  const places=JSON.parse(fs.readFileSync('data/map-places.json','utf8')).places;
  const stats=assignRoadDisplayNames(data,places),names=data.roads.map(roadDisplayName);
- assert.ok(stats.contextual>7000);assert.ok(names.every(n=>n!=='支路'&&n.length>0));
+ assert.equal(stats.contextual,data.roads.filter(r=>isUnnamedRoad(r)).length);assert.ok(names.every(n=>n!=='支路'&&n.length>0));
  assignRoadDisplayNames(data,places);assert.deepEqual(data.roads.map(roadDisplayName),names);
  data.roads.forEach((r,i)=>{assert.equal(r.name,before[i].name);assert.equal(JSON.stringify(r.points),before[i].points);});
 });

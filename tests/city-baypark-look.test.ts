@@ -1,3 +1,4 @@
+import {CITY_REGION} from '../src/city-region.ts';
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {fileURLToPath} from 'node:url';
@@ -70,7 +71,7 @@ test('A/B disposal and repeated creation leave one reusable, dormant plugin',()=
 // The coast ribbon is deliberately selected by asset identity. This pins that
 // identity and actual sample coverage to the shipped GLB, without inventing a
 // broad ground plane or treating absent footway tags as a surveyed path.
-test('current coast assets contain the named receivers in the sample area',async()=>{
+test('current coast assets contain the named receivers in the sample area',{skip:CITY_REGION.id==='guyuan'?'Requires archived Shenzhen assets; Guyuan has dedicated region tests':false},async()=>{
  await MeshoptDecoder.ready;
  const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.decoder':MeshoptDecoder});
  const found=new Map<string,number>();

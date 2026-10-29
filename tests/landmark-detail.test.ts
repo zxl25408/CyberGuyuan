@@ -1,3 +1,4 @@
+import {CITY_REGION} from '../src/city-region.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -18,7 +19,7 @@ test('terrain north direction and world offset agree with exported SW-NE triangl
  assert.equal(terrainHeight(grid,105,221),0);
 });
 
-test('live detail merge replaces old collisions, blocks real footprints and leaves arrivals drivable',async t=>{
+test('live detail merge replaces old collisions, blocks real footprints and leaves arrivals drivable',{skip:CITY_REGION.id==='guyuan'?'Requires archived Shenzhen assets; Guyuan has dedicated region tests':false},async t=>{
  const json=async (path:string)=>JSON.parse(await readFile(new URL('../public'+path,import.meta.url),'utf8'));
  const data=await json('/city/city.json');
  t.mock.method(globalThis,'fetch',async (path:string)=>new Response(JSON.stringify(await json(path)),{headers:{'content-type':'application/json'}}));

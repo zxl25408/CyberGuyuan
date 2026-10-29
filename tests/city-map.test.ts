@@ -105,19 +105,20 @@ test('road label anchors use arc length, not a bounding-box or vertex average', 
 
 test('sourced place catalog has unique source IDs and uses the current game coordinate conversion', () => {
   const catalog = JSON.parse(fs.readFileSync(new URL('../data/map-places.json', import.meta.url), 'utf8')) as {schemaVersion: number; places: SourcedMapPlace[]};
-  assert.equal(catalog.schemaVersion, 1); assert.ok(catalog.places.length > 150);
+  assert.equal(catalog.schemaVersion, 2); assert.ok(catalog.places.length >= 11);
   assert.equal(new Set(catalog.places.map(place => place.id)).size, catalog.places.length);
-  assert.deepEqual(catalog.places.filter(place => place.kind === 'city').map(place => place.name).sort(), ['南山区', '福田区', '罗湖区']);
+  assert.ok(catalog.places.some(place => place.name === '古雁公园')); assert.ok(catalog.places.every(place=>place.lon>106&&place.lon<107));
   for (const place of catalog.places) {
     const [x, z] = wgs84ToMap(place.lon, place.lat);
     close(place.x, x, .00002); close(place.z, z, .00002);
-    assert.match(place.source.url!, /^https:\/\/www\.openstreetmap\.org\/(node|way|relation)\/\d+$/);
+    assert.equal(place.source.provider, 'Committed OSM-derived Guyuan map');
     assert.ok(place.source.file && place.source.coordinateMethod);
   }
   const city = JSON.parse(fs.readFileSync(new URL('../public/city/city.json', import.meta.url), 'utf8')) as CityData;
   for (const landmark of city.landmarks as (typeof city.landmarks[number] & {lon?: number; lat?: number})[]) {
     if (landmark.lon === undefined || landmark.lat === undefined) continue;
     const [x, z] = wgs84ToMap(landmark.lon, landmark.lat);
-    close(x, landmark.x, .011); close(z, landmark.z, .011);
+    // Source lon/lat are serialized to 6 decimals (up to .056m precision loss).
+    close(x, landmark.x, .065); close(z, landmark.z, .065);
   }
 });

@@ -86,6 +86,18 @@ export class CareerGame {
   ];
  }
  get save():CareerSave{return structuredClone(this.saved);}
+ /** Checkpoints are bound to the wallet state to prevent replaying a paid job. */
+ checkpoint(){return {version:1,save:this.save,contract:structuredClone(this.contract)};}
+ restoreCheckpoint(value:unknown,frame:CareerFrame):boolean{
+  if(this.contract)return false;
+  if(!isRecord(value)||value.version!==1||JSON.stringify(value.save)!==JSON.stringify(this.saved)||!isRecord(value.contract)||!validFrame(frame))return false;
+  const c=value.contract,job=this.jobs.find(j=>j.id===c.jobId);
+  if(!job||!Number.isInteger(c.objectiveIndex)||(c.objectiveIndex as number)<0||(c.objectiveIndex as number)>=job.objectives.length)return false;
+  for(const key of ['elapsed','hold','quality','actualDistance','legDistance','legDrivenDistance','lastOdometer','startOdometer'])if(typeof c[key]!=='number'||!Number.isFinite(c[key])||(c[key] as number)<0||(c[key] as number)>1e9)return false;
+  if((c.quality as number)>100||!Array.isArray(c.lastPosition)||c.lastPosition.length!==2||!c.lastPosition.every(Number.isFinite)||distance(frame.position,c.lastPosition as CareerPoint)>50)return false;
+  this.contract={...(c as unknown as ActiveContract),invalid:c.invalid===true,restBonus:c.restBonus===true,hold:0,debugEpoch:frame.debugEpoch,lastPosition:[...frame.position],lastSpeed:0,lastYaw:frame.yaw,lastOdometer:frame.odometer};
+  return true;
+ }
  get active(){
   const a=this.contract;if(!a)return null;const job=this.jobs.find(j=>j.id===a.jobId)!;
   const raw=job.objectives[a.objectiveIndex],holdSeconds=raw.holdSeconds*(this.owned('work-tools')?.6:1);

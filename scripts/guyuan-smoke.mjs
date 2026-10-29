@@ -1,31 +1,34 @@
 import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
-// Windows: use the preinstalled Edge channel (no browser download needed).
-const browser = await chromium.launch({headless: true, channel: 'msedge',
-  args: ['--use-angle=d3d11', '--enable-unsafe-swiftshader']});
-const page = await browser.newPage({viewport: {width: 1600, height: 1000}, deviceScaleFactor: 1});
-const errors = [], console_ = [];
-page.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
-page.on('console', m => { if (['error', 'warning'].includes(m.type())) console_.push(m.type() + ': ' + m.text().slice(0, 300)); });
-page.on('response', r => { if (r.status() >= 400) errors.push(r.status() + ': ' + r.url()); });
-await page.goto(process.env.GAME_URL ?? 'http://127.0.0.1:5199/', {waitUntil: 'domcontentloaded'});
-await page.waitForTimeout(15000);
-await fs.mkdir('artifacts/guyuan', {recursive: true});
-await page.screenshot({path: 'artifacts/guyuan/boot-15s.png'});
-const loadingText = await page.evaluate(() => document.querySelector('#loading,.loading,[class*=load]')?.textContent?.slice(0, 200) ?? 'no-loading-el').catch(() => '?');
-// try clicking through intro buttons if present
-for (const name of ['走进这座城市', '开始漫游', '去城里转转']) {
-  try { await page.getByRole('button', {name, exact: false}).first().click({timeout: 2000}); } catch {}
-}
-await page.waitForTimeout(10000);
-await page.screenshot({path: 'artifacts/guyuan/after-25s.png'});
-let diag = null;
-try { diag = await page.evaluate(() => {
-  const w = window.__SHENCHENGJI_CITY__;
-  if (!w) return 'no-global';
-  return {ready: w.ready, state: w.state, counts: w.world?.data?.meta?.counts,
-    sceneMeshes: w.world?.scene?.meshes?.length,
-    enabledMeshes: w.world?.scene?.meshes?.filter(m => m.isEnabled() && m.getTotalVertices() > 0).length};
-}); } catch (e) { diag = 'eval-fail: ' + e.message.slice(0, 120); }
-console.log(JSON.stringify({loadingText, errors: errors.slice(0, 15), console: console_.slice(0, 15), diag}, null, 2));
-await browser.close();
+import assert from 'node:assert/strict';
+const launch={headless:true};
+if(process.env.BROWSER_PATH)launch.executablePath=process.env.BROWSER_PATH;
+else if(process.env.BROWSER_CHANNEL||process.platform==='win32')launch.channel=process.env.BROWSER_CHANNEL||'msedge';
+const browser=await chromium.launch(launch),page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
+page.on('pageerror',e=>errors.push(e.message));
+page.on('response',r=>{if(r.status()>=400&&/\/city\/|\/data\//.test(r.url()))errors.push(`${r.status()} ${r.url()}`);});
+try{
+ await page.goto(process.env.GAME_URL||'http://127.0.0.1:5199/',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>window.__SHENCHENGJI_CITY__?.ready,null,{timeout:120000});
+ await page.getByRole('button',{name:/我的固原/}).click();
+ await page.getByRole('button',{name:'载入四站导览',exact:true}).click();
+ await page.locator('#personal-status').filter({hasText:'四站导览已载入，点击导航下一站开始'}).waitFor();
+ assert.equal(await page.locator('#personal-route li').count(),4);
+ await page.locator('[data-note]').first().fill('浏览器回归验证：保存一段公园记忆');
+ await page.getByRole('button',{name:'保存当前位置',exact:true}).click();
+ await page.locator('#personal-quality').selectOption('low');
+ await fs.mkdir('artifacts/guyuan',{recursive:true});
+ await page.screenshot({path:'artifacts/guyuan/personal-desktop.png'});
+ await page.reload();await page.waitForFunction(()=>window.__SHENCHENGJI_CITY__?.ready,null,{timeout:120000});
+ await page.getByRole('button',{name:'继续上次游玩',exact:true}).waitFor({timeout:10000});
+ await page.getByRole('button',{name:'继续上次游玩',exact:true}).click();
+ await page.getByRole('button',{name:/我的固原/}).click();
+ assert.equal(await page.locator('[data-note]').first().inputValue(),'浏览器回归验证：保存一段公园记忆');
+ assert.equal(await page.locator('#personal-quality').inputValue(),'low');
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:'artifacts/guyuan/personal-mobile.png'});
+ await page.getByRole('button',{name:'导航下一站',exact:true}).click();
+ await page.waitForFunction(()=>window.__SHENCHENGJI_CITY__?.world.autopilot?.status.active,null,{timeout:10000});
+ await page.waitForFunction(()=>window.__SHENCHENGJI_CITY__?.state.distance>3,null,{timeout:15000});
+ assert.deepEqual(errors,[]);
+ console.log('Guyuan smoke passed: boot, tour, notes, saved position, reload, quality and mobile layout');
+}catch(e){await fs.mkdir('artifacts/guyuan',{recursive:true});await page.screenshot({path:'artifacts/guyuan/failure.png'});console.error(JSON.stringify({errors,loading:await page.locator('#city-loading').innerText().catch(()=>''),diagnostics:await page.evaluate(()=>({ready:window.__SHENCHENGJI_CITY__?.ready}))},null,2));throw e;}finally{await browser.close();}

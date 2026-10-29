@@ -1,3 +1,5 @@
+> 2026-10-29：本轮功能、运行与回滚说明见 [UPGRADE.md](UPGRADE.md)。
+
 # GTA_SZ · 深城纪
 
 **Building a playable Shenzhen in the browser with GPT-6 Astra and Fable 5.1.**

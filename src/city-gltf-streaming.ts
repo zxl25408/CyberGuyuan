@@ -1,5 +1,5 @@
 import {registerGLTFExtension} from '@babylonjs/loaders/glTF/2.0/glTFLoaderExtensionRegistry.js';
-import {BackgroundMaterial,Material,PBRMaterial,StandardMaterial,type Scene} from '@babylonjs/core';
+import {BackgroundMaterial,Engine,Material,PBRMaterial,StandardMaterial,type Scene} from '@babylonjs/core';
 type LitMaterial=Material&{maxSimultaneousLights:number};
 type DirtyGuard={_blockDirtyMechanism:boolean};
 const lit=(m:Material):m is LitMaterial=>'maxSimultaneousLights' in m;
@@ -20,12 +20,14 @@ const lit=(m:Material):m is LitMaterial=>'maxSimultaneousLights' in m;
  *
  * New materials from the GLB are dirty from creation and are unaffected. */
 let suppressed=0;const touched=new Set<LitMaterial>();
+const activeScenes=new WeakMap<Scene,number>();
+const compatible=Engine.Version==='8.56.2';
 for(const proto of [PBRMaterial.prototype,StandardMaterial.prototype,BackgroundMaterial.prototype]){
  const descriptor=Object.getOwnPropertyDescriptor(proto,'maxSimultaneousLights');
- if(!descriptor?.set||!descriptor.get)continue;
+ if(!compatible||!descriptor?.set||!descriptor.get)continue;
  const set=descriptor.set;
  Object.defineProperty(proto,'maxSimultaneousLights',{...descriptor,set(this:LitMaterial,value:number){
-  if(suppressed===0||this.maxSimultaneousLights===value){set.call(this,value);return;}
+  if(suppressed===0||!activeScenes.get(this.getScene())||this.maxSimultaneousLights===value){set.call(this,value);return;}
   const guard=this as unknown as DirtyGuard;touched.add(this);const blocked=guard._blockDirtyMechanism;guard._blockDirtyMechanism=true;
   try{set.call(this,value);}finally{guard._blockDirtyMechanism=blocked;}
  }});
@@ -37,12 +39,13 @@ export function preserveStreamingLightBudgets(scene:Scene){
  // at their first seen value). Budgets: the value as of the last rendered
  // frame, which is what the loader's promotion is about to overwrite.
  const capture=()=>{for(const m of scene.materials)if(lit(m)){if(!baseline.has(m))baseline.set(m,m.maxSimultaneousLights);budgets.set(m,m.maxSimultaneousLights);}};
- capture();suppressed++;const observer=scene.onBeforeRenderObservable.add(capture);let done=false;
+ capture();suppressed++;activeScenes.set(scene,(activeScenes.get(scene)??0)+1);const observer=scene.onBeforeRenderObservable.add(capture);let done=false;
  return ()=>{if(done)return;done=true;scene.onBeforeRenderObservable.remove(observer);
-  if(scene.isDisposed){suppressed=Math.max(0,suppressed-1);baseline.clear();budgets.clear();return;}
+  if(scene.isDisposed){activeScenes.set(scene,Math.max(0,(activeScenes.get(scene)??1)-1));suppressed=Math.max(0,suppressed-1);baseline.clear();budgets.clear();return;}
   const count=scene.lights.length;
   // Still suppressed: undoing the promotion must not dirty either.
   for(const [m,budget] of budgets)if(scene.materials.includes(m)&&budget<count&&m.maxSimultaneousLights===count)m.maxSimultaneousLights=budget;
+  activeScenes.set(scene,Math.max(0,(activeScenes.get(scene)??1)-1));
   suppressed=Math.max(0,suppressed-1);
   // Reconcile suppressed setters: only a net change needs new shaders.
   for(const m of touched){const start=baseline.get(m);if(start!==undefined&&start!==m.maxSimultaneousLights&&scene.materials.includes(m))m.markAsDirty(Material.LightDirtyFlag);}
